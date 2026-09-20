@@ -14,9 +14,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const maxWeeklyHours = 7 * 24
+
 func (s *server) handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil || id <= 0 || id > 2147483647 {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 32)
+	if err != nil || id <= 0 {
 		http.Error(w, "Invalid person ID", http.StatusBadRequest)
 		return
 	}
@@ -29,7 +31,12 @@ func (s *server) handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Provide a JSON object with weeklyHours", http.StatusBadRequest)
 		return
 	}
-	if decoder.Decode(new(any)) != io.EOF || input.WeeklyHours == nil || math.IsNaN(*input.WeeklyHours) || math.IsInf(*input.WeeklyHours, 0) || *input.WeeklyHours < 0 || *input.WeeklyHours > 168 {
+	if decoder.Decode(new(any)) != io.EOF {
+		http.Error(w, "Provide a single JSON object", http.StatusBadRequest)
+		return
+	}
+	if input.WeeklyHours == nil || math.IsNaN(*input.WeeklyHours) || math.IsInf(*input.WeeklyHours, 0) ||
+		*input.WeeklyHours < 0 || *input.WeeklyHours > maxWeeklyHours {
 		http.Error(w, "weeklyHours must be a number between 0 and 168", http.StatusBadRequest)
 		return
 	}

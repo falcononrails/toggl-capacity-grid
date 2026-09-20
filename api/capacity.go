@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 )
+
+const maxRangeDays = 93
 
 type capacityWeek struct {
 	Start       string `json:"start"`
@@ -55,15 +59,22 @@ func weeksInRange(from, to time.Time) []capacityWeek {
 	return weeks
 }
 
-func (s *server) handleCapacity(w http.ResponseWriter, r *http.Request) {
-	from, fromErr := time.Parse(time.DateOnly, r.URL.Query().Get("from"))
-	to, toErr := time.Parse(time.DateOnly, r.URL.Query().Get("to"))
+func parseCapacityRange(fromValue, toValue string) (time.Time, time.Time, error) {
+	from, fromErr := time.Parse(time.DateOnly, fromValue)
+	to, toErr := time.Parse(time.DateOnly, toValue)
 	if fromErr != nil || toErr != nil || from.Year() < 1 || to.Year() < 1 {
-		http.Error(w, "from and to must be valid YYYY-MM-DD dates", http.StatusBadRequest)
-		return
+		return from, to, errors.New("from and to must be valid YYYY-MM-DD dates")
 	}
-	if to.Before(from) || to.After(from.AddDate(0, 0, 92)) {
-		http.Error(w, "Choose a range of 1 to 93 days", http.StatusBadRequest)
+	if to.Before(from) || to.After(from.AddDate(0, 0, maxRangeDays-1)) {
+		return from, to, fmt.Errorf("Choose a range of 1 to %d days", maxRangeDays)
+	}
+	return from, to, nil
+}
+
+func (s *server) handleCapacity(w http.ResponseWriter, r *http.Request) {
+	from, to, err := parseCapacityRange(r.URL.Query().Get("from"), r.URL.Query().Get("to"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
