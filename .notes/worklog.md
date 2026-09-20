@@ -13,3 +13,7 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Open decisions to discuss: week boundaries and weekends; partial-week capacity; global versus dated capacity edits; query shape and range bounds; refresh behavior after saving. Prefer the existing pgx connection and SQL aggregation; avoid loading all assignments into the browser.
 - Setup check: Docker, Make and Go were not found on Windows PATH or at their usual install paths, or via `which` in Ubuntu-22.04 WSL. Port 3000 is occupied by the website preview. The assignment has not been started yet. Resolve the runtime and free that port without changing Compose.
 - Created a separate private repository, retained the starter history, and created `feature/capacity-view`. No public fork or public solution was created.
+
+## Runtime check
+
+- Installed Docker Engine, Compose and Make in the existing Ubuntu WSL environment. Started the original Compose stack without changing its files. `/api/health` returns `{"ok":true,"people":500}` and the browser shows the starter placeholder for 2025-12-29 through 2026-01-16. The setup blocker is resolved; feature work has not started.
