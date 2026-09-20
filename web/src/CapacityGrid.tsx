@@ -117,19 +117,6 @@ export function CapacityGrid({ from, to, children }: Props) {
           <RefreshCw size={17} className={query.isFetching ? 'spinning' : ''} />
         </button>
       </div>
-      {saved && (
-        <div className="save-notice" role="status">
-          <Check size={15} /> {saved}'s capacity saved.
-          <button
-            className="icon-button"
-            aria-label="Dismiss confirmation"
-            title="Dismiss confirmation"
-            onClick={() => setSaved('')}
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
       {query.isError && (
         <div className="error-banner" role="alert">
           <AlertCircle size={18} />
@@ -142,23 +129,40 @@ export function CapacityGrid({ from, to, children }: Props) {
           </button>
         </div>
       )}
-      {query.isPending ? (
-        <div className="grid-loading" role="status">
-          <RefreshCw size={20} className="spinning" /> Loading capacity...
-        </div>
-      ) : (
-        data && (
-          <CapacityTable
-            from={from}
-            to={to}
-            weeks={data.weeks}
-            people={data.people}
-            visiblePeople={people}
-            onEdit={editPerson}
-            onClearFilters={clearFilters}
-          />
-        )
-      )}
+      <div className="grid-area">
+        {query.isPending ? (
+          <div className="grid-loading" role="status">
+            <RefreshCw size={20} className="spinning" /> Loading capacity...
+          </div>
+        ) : (
+          data && (
+            <CapacityTable
+              from={from}
+              to={to}
+              weeks={data.weeks}
+              people={data.people}
+              visiblePeople={people}
+              onEdit={editPerson}
+              onClearFilters={clearFilters}
+            />
+          )
+        )}
+        {saved && (
+          <div className="notice-anchor">
+            <div className="save-notice" role="status">
+              <Check size={18} aria-hidden="true" /> <span>{saved}'s capacity saved.</span>
+              <button
+                className="icon-button"
+                aria-label="Dismiss confirmation"
+                title="Dismiss confirmation"
+                onClick={() => setSaved('')}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="grid-footer">
         <span>
           {data?.weeks.length ?? 0} weeks · {formatDate(from)} - {formatDate(to)}

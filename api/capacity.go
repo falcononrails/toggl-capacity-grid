@@ -9,7 +9,8 @@ import (
 	"time"
 )
 
-const maxRangeDays = 93
+// Allow the longest calendar quarter while bounding the query and grid size.
+const maxRangeDays = 92
 
 type capacityWeek struct {
 	Start       string `json:"start"`

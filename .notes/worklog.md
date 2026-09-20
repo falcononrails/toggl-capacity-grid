@@ -8,3 +8,4 @@
 - Checked seeded totals, partial weeks, zero capacity, edits and failures. Go tests/vet and frontend tests/build pass.
 - Limits: no holidays, capacity history or edit-conflict detection. Browser checks are manual. No end-to-end suite.
 - Theme starts from the system preference and remembers the selected light/dark mode locally.
+- Added calendar Week, Month and Quarter presets. Custom ranges now allow 92 days, the longest quarter, to bound query and grid size.

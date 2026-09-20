@@ -53,7 +53,7 @@ func TestInvalidRequests(t *testing.T) {
 		{"GET", "/api/capacity?from=2026-02-30&to=2026-03-01", ""},
 		{"GET", "/api/capacity?from=2026-01-02&to=2026-01-01", ""},
 		{"GET", "/api/capacity?from=2026-01-01&to=2026-12-31", ""},
-		{"GET", "/api/capacity?from=2026-01-01&to=2026-04-04", ""},
+		{"GET", "/api/capacity?from=2026-01-01&to=2026-04-03", ""},
 		{"GET", "/api/capacity?from=0000-01-01&to=0000-01-02", ""},
 		{"PATCH", "/api/people/nope", `{"weeklyHours":40}`},
 		{"PATCH", "/api/people/2147483648", `{"weeklyHours":40}`},
@@ -141,8 +141,8 @@ func TestSeededCapacity(t *testing.T) {
 			t.Fatal("empty assignment range should retain people with zero allocation")
 		}
 	}
-	if maximum := get("2026-01-01", "2026-04-03"); len(maximum.People) != 500 || len(maximum.Weeks) != 14 {
-		t.Fatal("the 93-day limit should be inclusive and return all people and weeks")
+	if maximum := get("2026-07-01", "2026-09-30"); len(maximum.People) != 500 || len(maximum.Weeks) != 14 {
+		t.Fatal("the longest calendar quarter should return all people and weeks")
 	}
 	oldHours := result.People[3].WeeklyHours
 	defer func() {
