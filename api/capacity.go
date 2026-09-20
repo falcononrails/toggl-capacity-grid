@@ -1,15 +1,75 @@
 package main
 
-import "net/http"
+import (
+	"context"
+	"log"
+	"net/http"
+	"time"
+)
 
-// handleCapacity serves GET /api/capacity?from=YYYY-MM-DD&to=YYYY-MM-DD
-//
-// It should return, for every person and every week in the requested range,
-// how many hours they are allocated and how much capacity they have.
-//
-// The response shape is yours to design — the grid in web/ is the consumer.
-//
-// TODO: implement.
+type capacityWeek struct {
+	Start       string `json:"start"`
+	End         string `json:"end"`
+	WorkingDays int    `json:"workingDays"`
+}
+
+type capacityCell struct {
+	WeekStart      string  `json:"weekStart"`
+	AllocatedHours float64 `json:"allocatedHours"`
+	CapacityHours  float64 `json:"capacityHours"`
+}
+
+type personCapacity struct {
+	ID          int            `json:"id"`
+	Name        string         `json:"name"`
+	WeeklyHours float64        `json:"weeklyHours"`
+	Weeks       []capacityCell `json:"weeks"`
+}
+
+type capacityResponse struct {
+	From   string           `json:"from"`
+	To     string           `json:"to"`
+	Weeks  []capacityWeek   `json:"weeks"`
+	People []personCapacity `json:"people"`
+}
+
+// Dates are inclusive. Capacity is spread evenly across Monday-Friday;
+// holidays and individual working schedules are not represented in the schema.
+func weeksInRange(from, to time.Time) []capacityWeek {
+	monday := from.AddDate(0, 0, -(int(from.Weekday())+6)%7)
+	weeks := []capacityWeek{}
+	for start := monday; !start.After(to); start = start.AddDate(0, 0, 7) {
+		week := capacityWeek{Start: start.Format(time.DateOnly), End: start.AddDate(0, 0, 6).Format(time.DateOnly)}
+		for day := 0; day < 5; day++ {
+			date := start.AddDate(0, 0, day)
+			if !date.Before(from) && !date.After(to) {
+				week.WorkingDays++
+			}
+		}
+		weeks = append(weeks, week)
+	}
+	return weeks
+}
+
 func (s *server) handleCapacity(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	from, fromErr := time.Parse(time.DateOnly, r.URL.Query().Get("from"))
+	to, toErr := time.Parse(time.DateOnly, r.URL.Query().Get("to"))
+	if fromErr != nil || toErr != nil || from.Year() < 1 || to.Year() < 1 {
+		http.Error(w, "from and to must be valid YYYY-MM-DD dates", http.StatusBadRequest)
+		return
+	}
+	if to.Before(from) || to.After(from.AddDate(0, 0, 92)) {
+		http.Error(w, "Choose a range of 1 to 93 days", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	result, err := loadCapacity(ctx, s.db, from, to)
+	if err != nil {
+		log.Printf("load capacity: %v", err)
+		http.Error(w, "Could not load capacity", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
 }

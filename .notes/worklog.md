@@ -17,3 +17,10 @@ left unfinished. Append as you go; a line or two per entry is right.
 ## Runtime check
 
 - Installed Docker Engine, Compose and Make in the existing Ubuntu WSL environment. Started the original Compose stack without changing its files. `/api/health` returns `{"ok":true,"people":500}` and the browser shows the starter placeholder for 2025-12-29 through 2026-01-16. The setup blocker is resolved; feature work has not started.
+
+## Capacity API
+
+- Chose Monday-based weeks and Monday-Friday workdays, with inclusive assignment dates. Partial ranges count only the selected weekdays and prorate weekly capacity. There is no holiday or individual schedule data to apply.
+- SQL sums assignment hours by person/week. The response fills missing weeks with zero allocation and retains all people. Capacity is calculated once per person/week, never summed across assignment rows. Requests are limited to 93 days to bound the grid and query size.
+- Capacity edits accept 0-168 hours, including decimals. They apply to every date because the schema has no capacity history. The update is last-write-wins; concurrent-edit protection is not implemented.
+- Go tests passed against the seeded Postgres database, including the independently checked first five people, overlapping work, partial weeks, weekend-only and empty ranges, invalid input, missing people and persisted capacity edits. Tests restore the person they change.
