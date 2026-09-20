@@ -6,6 +6,7 @@
 - Capacity edits apply to all dates. Save, then invalidate every cached range. No optimistic updates.
 - Search keeps rows mounted and hides non-matches. No debounce or new dependency. Virtualize if teams grow beyond this 500-person dataset.
 - Checked seeded totals, partial weeks, zero capacity, edits and failures. Go tests/vet and frontend tests/build pass.
+- Fractional capacity could falsely show over-allocation. Moved proration to Postgres numeric arithmetic and added regression cases.
 - Limits: no holidays, capacity history or edit-conflict detection. Browser checks are manual. No end-to-end suite.
 - Theme starts from the system preference and remembers the selected light/dark mode locally.
 - Added calendar Week, Month and Quarter presets. Custom ranges now allow 92 days, the longest quarter, to bound query and grid size.
