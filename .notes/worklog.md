@@ -24,3 +24,9 @@ left unfinished. Append as you go; a line or two per entry is right.
 - SQL sums assignment hours by person/week. The response fills missing weeks with zero allocation and retains all people. Capacity is calculated once per person/week, never summed across assignment rows. Requests are limited to 93 days to bound the grid and query size.
 - Capacity edits accept 0-168 hours, including decimals. They apply to every date because the schema has no capacity history. The update is last-write-wins; concurrent-edit protection is not implemented.
 - Go tests passed against the seeded Postgres database, including the independently checked first five people, overlapping work, partial weeks, weekend-only and empty ranges, invalid input, missing people and persisted capacity edits. Tests restore the person they change.
+
+## Grid and navigation
+
+- Used a native table with sticky names and week headers. Cells show allocated/available hours plus explicit over-capacity text. Name search and an over-capacity filter keep the 500-person seed usable without adding a grid library.
+- Added TanStack Query for date-keyed requests, cancellation and subsequent mutation invalidation, plus Lucide icons. There is no copied server-state store. Changing the date range shows a loading state rather than old numbers under new dates.
+- Production build passed. Opened the grid and checked the first five people against the API test expectations, then exercised search and next/previous week navigation. The local WSL mount does not notify Vite of Windows edits, so web-container restarts are needed here; run-environment files remain unchanged.
