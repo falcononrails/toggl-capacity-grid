@@ -7,3 +7,4 @@
 - Search keeps rows mounted and hides non-matches. No debounce or new dependency. Virtualize if teams grow beyond this 500-person dataset.
 - Checked seeded totals, partial weeks, zero capacity, edits and failures. Go tests/vet and frontend tests/build pass.
 - Limits: no holidays, capacity history or edit-conflict detection. Browser checks are manual; no end-to-end suite.
+- Theme starts from the system preference and remembers the selected light/dark mode locally.

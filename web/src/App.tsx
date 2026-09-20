@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useLayoutEffect, useState, type FormEvent } from 'react'
+import { ArrowLeft, ArrowRight, Moon, Sun } from 'lucide-react'
 import { CapacityGrid } from './CapacityGrid'
 import { isValidRange, shiftDate } from './dates'
 
@@ -8,6 +8,24 @@ const initialRange = { from: '2025-12-29', to: '2026-01-16' }
 export function App() {
   const [range, setRange] = useState(initialRange)
   const [error, setError] = useState('')
+  const [dark, setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem('capacity-theme')
+      if (saved === 'dark' || saved === 'light') return saved === 'dark'
+    } catch {
+      /* Storage can be unavailable in private browsing. */
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+    try {
+      localStorage.setItem('capacity-theme', dark ? 'dark' : 'light')
+    } catch {
+      /* The toggle still works without persistence. */
+    }
+  }, [dark])
 
   function applyRange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,9 +51,19 @@ export function App() {
 
   return (
     <main>
+      <header className="page-heading">
+        <h1>Capacity</h1>
+        <button
+          className="icon-button"
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={() => setDark(!dark)}
+        >
+          {dark ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+      </header>
       <section aria-label="Capacity planning">
         <div className="range-toolbar">
-          <h1>Capacity</h1>
           <div className="week-navigation">
             <button
               className="icon-button"
