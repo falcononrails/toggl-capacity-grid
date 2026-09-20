@@ -1,23 +1,12 @@
-import { useState } from 'react'
+import { useCallback, useDeferredValue, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  AlertCircle,
-  AlertTriangle,
-  Check,
-  Pencil,
-  RefreshCw,
-  Search,
-  Users,
-  X,
-} from 'lucide-react'
+import { AlertCircle, AlertTriangle, Check, RefreshCw, Search, X } from 'lucide-react'
 import { hours, isOverCapacity, requestJSON, type Capacity, type Person } from './api'
 import { formatDate } from './dates'
 import { CapacityEditor } from './CapacityEditor'
+import { CapacityTable } from './CapacityTable'
 
-type Props = {
-  from: string
-  to: string
-}
+type Props = { from: string; to: string }
 
 export function CapacityGrid({ from, to }: Props) {
   const [search, setSearch] = useState('')
@@ -30,23 +19,39 @@ export function CapacityGrid({ from, to }: Props) {
       requestJSON<Capacity>(`/api/capacity?${new URLSearchParams({ from, to })}`, { signal }),
   })
   const data = query.data
-  const people =
-    data?.people.filter(
-      (person) =>
-        person.name.toLowerCase().includes(search.trim().toLowerCase()) &&
-        (!onlyOver || person.weeks.some(isOverCapacity)),
-    ) ?? []
-  const overCount = data?.people.filter((person) => person.weeks.some(isOverCapacity)).length ?? 0
-  const totalAllocated =
-    data?.people.reduce(
-      (total, person) => total + person.weeks.reduce((sum, week) => sum + week.allocatedHours, 0),
-      0,
-    ) ?? 0
-  const totalCapacity =
-    data?.people.reduce(
-      (total, person) => total + person.weeks.reduce((sum, week) => sum + week.capacityHours, 0),
-      0,
-    ) ?? 0
+  const searchTerm = search.trim().toLowerCase()
+  // Keep typing responsive while React renders a larger result set.
+  const deferredSearch = useDeferredValue(searchTerm)
+  const people = useMemo(
+    () =>
+      data?.people.filter(
+        (person) =>
+          person.name.toLowerCase().includes(deferredSearch) &&
+          (!onlyOver || person.weeks.some(isOverCapacity)),
+      ) ?? [],
+    [data, deferredSearch, onlyOver],
+  )
+  const summary = useMemo(() => {
+    let allocated = 0
+    let capacity = 0
+    let overCount = 0
+    for (const person of data?.people ?? []) {
+      if (person.weeks.some(isOverCapacity)) overCount++
+      for (const week of person.weeks) {
+        allocated += week.allocatedHours
+        capacity += week.capacityHours
+      }
+    }
+    return { allocated, capacity, overCount }
+  }, [data])
+  const editPerson = useCallback((person: Person) => {
+    setSaved('')
+    setEditing(person)
+  }, [])
+  const clearFilters = useCallback(() => {
+    setSearch('')
+    setOnlyOver(false)
+  }, [])
 
   return (
     <>
@@ -54,19 +59,19 @@ export function CapacityGrid({ from, to }: Props) {
         <div className="summary-total">
           <span>Total allocated</span>
           <strong>
-            {data ? hours(totalAllocated) : '...'} <small>h</small>
+            {data ? hours(summary.allocated) : '...'} <small>h</small>
           </strong>
         </div>
         <div className="summary-total">
           <span>Total capacity</span>
           <strong>
-            {data ? hours(totalCapacity) : '...'} <small>h</small>
+            {data ? hours(summary.capacity) : '...'} <small>h</small>
           </strong>
         </div>
-        <div className={`summary-warning ${overCount ? 'has-over' : ''}`}>
+        <div className={`summary-warning ${summary.overCount ? 'has-over' : ''}`}>
           <AlertTriangle size={18} aria-hidden="true" />
           <span>
-            <strong>{overCount}</strong> people over capacity
+            <strong>{summary.overCount}</strong> people over capacity
           </span>
         </div>
       </div>
@@ -98,7 +103,7 @@ export function CapacityGrid({ from, to }: Props) {
           />{' '}
           Over capacity only
         </label>
-        <span className="people-count">
+        <span className="people-count" aria-live="polite" aria-busy={searchTerm !== deferredSearch}>
           {data ? `${people.length} of ${data.people.length} people` : 'Loading people'}
         </span>
         <button
@@ -142,137 +147,22 @@ export function CapacityGrid({ from, to }: Props) {
         </div>
       ) : (
         data && (
-          <div
-            className="table-scroll"
-            tabIndex={0}
-            role="region"
-            aria-label="Weekly capacity grid"
-          >
-            <table>
-              <caption className="sr-only">
-                Weekly allocation and capacity, {from} to {to}. Hours use Monday-Friday working
-                days.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="person-column">
-                    Person
-                  </th>
-                  {data.weeks.map((week) => (
-                    <th key={week.start} scope="col" className="week-column">
-                      <span>
-                        {formatDate(week.start)} - {formatDate(week.end)}
-                      </span>
-                      <small>
-                        {week.start.slice(0, 4)}
-                        {week.end.slice(0, 4) !== week.start.slice(0, 4)
-                          ? ` / ${week.end.slice(0, 4)}`
-                          : ''}{' '}
-                        <span className={week.workingDays < 5 ? 'partial-week' : ''}>
-                          {week.workingDays} workdays{week.workingDays < 5 ? ' · partial' : ''}
-                        </span>
-                      </small>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {people.map((person) => (
-                  <tr key={person.id}>
-                    <th scope="row" className="person-column">
-                      <div className="person-name">
-                        <span className={`avatar avatar-${person.id % 5}`} aria-hidden="true">
-                          {person.name
-                            .split(' ')
-                            .map((part) => part[0])
-                            .slice(0, 2)
-                            .join('')}
-                        </span>
-                        <div>
-                          <bdi>{person.name}</bdi>
-                          <button
-                            className="edit-capacity"
-                            aria-label={`Edit capacity for ${person.name}`}
-                            title={`Edit capacity for ${person.name}`}
-                            onClick={() => {
-                              setSaved('')
-                              setEditing(person)
-                            }}
-                          >
-                            <span className="weekly-hours">
-                              {hours(person.weeklyHours)} <span>h / week</span>
-                            </span>
-                            <Pencil size={12} aria-hidden="true" />
-                          </button>
-                        </div>
-                      </div>
-                    </th>
-                    {person.weeks.map((week) => {
-                      const over = isOverCapacity(week)
-                      const ratio =
-                        week.capacityHours > 0
-                          ? Math.min(week.allocatedHours / week.capacityHours, 1)
-                          : week.allocatedHours > 0
-                            ? 1
-                            : 0
-                      return (
-                        <td key={week.weekStart} className="allocation-cell">
-                          <div
-                            className={`allocation ${over ? 'over' : week.allocatedHours === 0 ? 'idle' : 'available'}`}
-                          >
-                            <div className="cell-numbers">
-                              <span>
-                                <strong>{hours(week.allocatedHours)}</strong>
-                                <span className="cell-capacity">
-                                  {' '}
-                                  / {hours(week.capacityHours)} h
-                                </span>
-                              </span>
-                              {over && <AlertTriangle size={14} aria-hidden="true" />}
-                            </div>
-                            <div className="capacity-bar" aria-hidden="true">
-                              <span style={{ width: `${ratio * 100}%` }} />
-                            </div>
-                            <small>
-                              {over
-                                ? `${hours(week.allocatedHours - week.capacityHours)} h over`
-                                : week.capacityHours === 0
-                                  ? 'No capacity'
-                                  : `${hours(week.capacityHours - week.allocatedHours)} h available`}
-                            </small>
-                          </div>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {people.length === 0 && (
-              <div className="empty-state">
-                <Users size={26} />
-                <strong>{data.people.length === 0 ? 'No people yet' : 'No matching people'}</strong>
-                {(search || onlyOver) && (
-                  <button
-                    className="button secondary"
-                    onClick={() => {
-                      setSearch('')
-                      setOnlyOver(false)
-                    }}
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+          <CapacityTable
+            from={from}
+            to={to}
+            weeks={data.weeks}
+            people={data.people}
+            visiblePeople={people}
+            onEdit={editPerson}
+            onClearFilters={clearFilters}
+          />
         )
       )}
       <div className="grid-footer">
         <span>
           {data?.weeks.length ?? 0} weeks · {formatDate(from)} - {formatDate(to)}
         </span>
-        <span>Hours shown for the selected dates</span>
+        <span>Monday-Friday working days</span>
       </div>
       {editing && (
         <CapacityEditor
