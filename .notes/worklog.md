@@ -30,3 +30,9 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Used a native table with sticky names and week headers. Cells show allocated/available hours plus explicit over-capacity text. Name search and an over-capacity filter keep the 500-person seed usable without adding a grid library.
 - Added TanStack Query for date-keyed requests, cancellation and subsequent mutation invalidation, plus Lucide icons. There is no copied server-state store. Changing the date range shows a loading state rather than old numbers under new dates.
 - Production build passed. Opened the grid and checked the first five people against the API test expectations, then exercised search and next/previous week navigation. The local WSL mount does not notify Vite of Windows edits, so web-container restarts are needed here; run-environment files remain unchanged.
+
+## Editing capacity
+
+- The editor waits for PATCH, invalidates every capacity query, then waits for the active range to refetch. No optimistic calculation or rollback is needed. Inactive ranges are marked stale and fetched when revisited. A native dialog handles focus containment and Escape.
+- Verified Dee at 50 hours in the current and a previously cached range, then at zero, then restored 40. Allocations stayed unchanged. Invalid negative input did not close the editor.
+- Stopped the local API to test failure handling. A failed save kept the entered value and editor open. A failed refresh retained the old table with a visible stale-data warning and retry button. Restarted the API after the check.

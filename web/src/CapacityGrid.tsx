@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, AlertTriangle, RefreshCw, Search, Users, X } from 'lucide-react'
-import { hours, isOverCapacity, requestJSON, type Capacity } from './api'
+import { AlertCircle, AlertTriangle, Check, Pencil, RefreshCw, Search, Users, X } from 'lucide-react'
+import { hours, isOverCapacity, requestJSON, type Capacity, type Person } from './api'
 import { formatDate } from './dates'
+import { CapacityEditor } from './CapacityEditor'
 
 type Props = {
   from: string
@@ -12,6 +13,8 @@ type Props = {
 export function CapacityGrid({ from, to }: Props) {
   const [search, setSearch] = useState('')
   const [onlyOver, setOnlyOver] = useState(false)
+  const [editing, setEditing] = useState<Person | null>(null)
+  const [saved, setSaved] = useState('')
   const query = useQuery({
     queryKey: ['capacity', from, to],
     queryFn: ({ signal }) => requestJSON<Capacity>(`/api/capacity?${new URLSearchParams({ from, to })}`, { signal }),
@@ -37,6 +40,7 @@ export function CapacityGrid({ from, to }: Props) {
         <span className="people-count">{data ? `${people.length} of ${data.people.length} people` : 'Loading people'}</span>
         <button className="icon-button refresh" onClick={() => void query.refetch()} disabled={query.isFetching} aria-label="Refresh capacity" title="Refresh capacity"><RefreshCw size={17} className={query.isFetching ? 'spinning' : ''} /></button>
       </div>
+      {saved && <div className="save-notice" role="status"><Check size={15} /> {saved}'s capacity saved.<button className="icon-button" aria-label="Dismiss confirmation" title="Dismiss confirmation" onClick={() => setSaved('')}><X size={14} /></button></div>}
       {query.isError && <div className="error-banner" role="alert"><AlertCircle size={18} /><span>{data ? 'Could not refresh. The numbers below may be out of date. ' : ''}{query.error.message}</span><button className="button secondary" onClick={() => void query.refetch()}>Try again</button></div>}
       {query.isPending ? <div className="grid-loading" role="status"><RefreshCw size={20} className="spinning" /> Loading capacity...</div> : data && (
         <div className="table-scroll" tabIndex={0} role="region" aria-label="Weekly capacity grid">
@@ -50,7 +54,7 @@ export function CapacityGrid({ from, to }: Props) {
             <tbody>
               {people.map(person => <tr key={person.id}>
                 <th scope="row" className="person-column"><div className="person-name"><span className={`avatar avatar-${person.id % 5}`} aria-hidden="true">{person.name.split(' ').map(part => part[0]).slice(0, 2).join('')}</span><span>{person.name}</span></div></th>
-                <td className="capacity-column"><span className="weekly-hours">{hours(person.weeklyHours)} <span>h / week</span></span></td>
+                <td className="capacity-column"><button className="edit-capacity" aria-label={`Edit capacity for ${person.name}`} title={`Edit capacity for ${person.name}`} onClick={() => { setSaved(''); setEditing(person) }}><span className="weekly-hours">{hours(person.weeklyHours)} <span>h / week</span></span><Pencil size={13} aria-hidden="true" /></button></td>
                 {person.weeks.map(week => {
                   const over = isOverCapacity(week)
                   const ratio = week.capacityHours > 0 ? Math.min(week.allocatedHours / week.capacityHours, 1) : week.allocatedHours > 0 ? 1 : 0
@@ -67,6 +71,7 @@ export function CapacityGrid({ from, to }: Props) {
         </div>
       )}
       <div className="grid-footer"><span>{data?.weeks.length ?? 0} weeks · {formatDate(from)} - {formatDate(to)}</span><span>Hours shown for the selected dates</span></div>
+      {editing && <CapacityEditor key={editing.id} person={editing} onClose={() => setEditing(null)} onSaved={setSaved} />}
     </>
   )
 }
