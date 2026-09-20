@@ -604,10 +604,10 @@ tbody tr:hover > td {
   padding: 24px;
   color: var(--text);
   background: var(--surface);
-  box-shadow: 0 20px 80px #18332429;
+  box-shadow: 0 20px 80px #00000029;
 }
 .capacity-dialog::backdrop {
-  background: #182c2359;
+  background: #00000059;
 }
 .dialog-heading {
   display: flex;
