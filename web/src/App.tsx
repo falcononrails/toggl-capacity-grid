@@ -63,69 +63,70 @@ export function App() {
         </button>
       </header>
       <section aria-label="Capacity planning">
-        <div className="range-toolbar">
-          <div className="week-navigation">
-            <button
-              className="icon-button"
-              aria-label="Previous week"
-              title="Previous week"
-              onClick={() => moveWeek(-7)}
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <button
-              className="icon-button"
-              aria-label="Next week"
-              title="Next week"
-              onClick={() => moveWeek(7)}
-            >
-              <ArrowRight size={18} />
-            </button>
+        <CapacityGrid from={range.from} to={range.to}>
+          <div className="range-toolbar">
+            <div className="week-navigation">
+              <button
+                className="icon-button"
+                aria-label="Previous week"
+                title="Previous week"
+                onClick={() => moveWeek(-7)}
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <button
+                className="icon-button"
+                aria-label="Next week"
+                title="Next week"
+                onClick={() => moveWeek(7)}
+              >
+                <ArrowRight size={18} />
+              </button>
+            </div>
+            <form className="date-range" key={`${range.from}:${range.to}`} onSubmit={applyRange}>
+              <label>
+                From
+                <input
+                  aria-label="From date"
+                  name="from"
+                  type="date"
+                  min="0001-01-01"
+                  max="9999-12-31"
+                  required
+                  defaultValue={range.from}
+                />
+              </label>
+              <label>
+                To
+                <input
+                  aria-label="To date"
+                  name="to"
+                  type="date"
+                  min="0001-01-01"
+                  max="9999-12-31"
+                  required
+                  defaultValue={range.to}
+                />
+              </label>
+              <button className="button secondary" type="submit">
+                Apply
+              </button>
+            </form>
+            <div className="legend" aria-label="Allocation legend">
+              <span>
+                <i className="legend-dot available" /> Within capacity
+              </span>
+              <span>
+                <i className="legend-dot over" /> Over capacity
+              </span>
+            </div>
           </div>
-          <form className="date-range" key={`${range.from}:${range.to}`} onSubmit={applyRange}>
-            <label>
-              From
-              <input
-                aria-label="From date"
-                name="from"
-                type="date"
-                min="0001-01-01"
-                max="9999-12-31"
-                required
-                defaultValue={range.from}
-              />
-            </label>
-            <label>
-              To
-              <input
-                aria-label="To date"
-                name="to"
-                type="date"
-                min="0001-01-01"
-                max="9999-12-31"
-                required
-                defaultValue={range.to}
-              />
-            </label>
-            <button className="button secondary" type="submit">
-              Apply
-            </button>
-          </form>
-          <div className="legend" aria-label="Allocation legend">
-            <span>
-              <i className="legend-dot available" /> Within capacity
-            </span>
-            <span>
-              <i className="legend-dot over" /> Over capacity
-            </span>
-          </div>
-        </div>
-        {error && (
-          <p className="error range-error" role="alert">
-            {error}
-          </p>
-        )}
-        <CapacityGrid from={range.from} to={range.to} />
+          {error && (
+            <p className="error range-error" role="alert">
+              {error}
+            </p>
+          )}
+        </CapacityGrid>
       </section>
     </main>
   )

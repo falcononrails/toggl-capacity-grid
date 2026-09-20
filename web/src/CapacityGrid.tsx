@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, AlertTriangle, Check, RefreshCw, Search, X } from 'lucide-react'
 import { hours, isOverCapacity, requestJSON, type Capacity, type Person } from './api'
@@ -6,9 +6,9 @@ import { formatDate } from './dates'
 import { CapacityEditor } from './CapacityEditor'
 import { CapacityTable } from './CapacityTable'
 
-type Props = { from: string; to: string }
+type Props = { from: string; to: string; children: ReactNode }
 
-export function CapacityGrid({ from, to }: Props) {
+export function CapacityGrid({ from, to, children }: Props) {
   const [search, setSearch] = useState('')
   const [onlyOver, setOnlyOver] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
@@ -75,6 +75,7 @@ export function CapacityGrid({ from, to }: Props) {
           </span>
         </div>
       </div>
+      {children}
       <div className="people-toolbar">
         <label className="search">
           <Search size={17} aria-hidden="true" />

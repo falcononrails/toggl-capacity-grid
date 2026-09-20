@@ -14,6 +14,9 @@
   --warning-track: #f8d9ce;
   --success-bg: #edf7f1;
   --success: #276a4f;
+  --accent: #166d57;
+  --accent-hover: #125943;
+  --on-accent: #fff;
   font-family: ui-sans-serif, system-ui, sans-serif;
   color: var(--text);
   background: var(--page);
@@ -36,7 +39,10 @@
   --warning: #ffa69a;
   --warning-track: #673b35;
   --success-bg: #20362c;
-  --success: #99dbb7;
+  --success: #5eecab;
+  --accent: #50dfa4;
+  --accent-hover: #7cedba;
+  --on-accent: #102a1e;
 }
 * {
   box-sizing: border-box;
@@ -93,8 +99,10 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
 }
 .week-navigation {
   display: flex;
@@ -160,11 +168,11 @@ input[type='number'] {
   background: var(--hover);
 }
 .primary {
-  background: #166d57;
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .primary:hover {
-  background: #125943;
+  background: var(--accent-hover);
 }
 .legend {
   display: flex;
@@ -240,7 +248,7 @@ input[type='number'] {
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
-  border-radius: 6px 6px 0 0;
+  border-top: 0;
 }
 .search {
   display: flex;
@@ -281,7 +289,7 @@ input[type='number'] {
   cursor: pointer;
 }
 input[type='checkbox'] {
-  accent-color: #19785e;
+  accent-color: var(--accent);
   width: 15px;
   height: 15px;
 }
@@ -563,6 +571,13 @@ tbody tr:hover > td {
   text-underline-offset: 4px;
 }
 .save-notice {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 4;
+  max-width: calc(100% - 32px);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px #0003;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -571,6 +586,9 @@ tbody tr:hover > td {
   color: var(--success);
   border: 1px solid var(--border);
   font-size: 12px;
+}
+.save-notice > svg {
+  flex-shrink: 0;
 }
 .save-notice .icon-button {
   margin-left: auto;
@@ -663,6 +681,10 @@ tbody tr:hover > td {
   }
 }
 @media (max-width: 640px) {
+  .save-notice {
+    right: 16px;
+    bottom: 16px;
+  }
   main {
     padding: 8px 16px 16px;
   }
