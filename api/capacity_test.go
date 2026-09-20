@@ -22,6 +22,7 @@ func TestWeeksInRange(t *testing.T) {
 		{"2026-01-07", "2026-01-13", "2026-01-05", []int{3, 2}},
 		{"2026-01-10", "2026-01-11", "2026-01-05", []int{0}},
 		{"2024-02-29", "2024-02-29", "2024-02-26", []int{1}},
+		{"9999-12-31", "9999-12-31", "9999-12-27", []int{1}},
 	} {
 		t.Run(test.from+"/"+test.to, func(t *testing.T) {
 			from, _ := time.Parse(time.DateOnly, test.from)
@@ -31,6 +32,9 @@ func TestWeeksInRange(t *testing.T) {
 				t.Fatalf("unexpected weeks: %+v", weeks)
 			}
 			for i, days := range test.days {
+				if _, err := time.Parse(time.DateOnly, weeks[i].End); err != nil {
+					t.Errorf("week label must remain a valid calendar date: %s", weeks[i].End)
+				}
 				if weeks[i].WorkingDays != days {
 					t.Errorf("week %d: got %d working days, want %d", i, weeks[i].WorkingDays, days)
 				}
@@ -49,7 +53,10 @@ func TestInvalidRequests(t *testing.T) {
 		{"GET", "/api/capacity?from=2026-02-30&to=2026-03-01", ""},
 		{"GET", "/api/capacity?from=2026-01-02&to=2026-01-01", ""},
 		{"GET", "/api/capacity?from=2026-01-01&to=2026-12-31", ""},
+		{"GET", "/api/capacity?from=2026-01-01&to=2026-04-04", ""},
+		{"GET", "/api/capacity?from=0000-01-01&to=0000-01-02", ""},
 		{"PATCH", "/api/people/nope", `{"weeklyHours":40}`},
+		{"PATCH", "/api/people/2147483648", `{"weeklyHours":40}`},
 		{"PATCH", "/api/people/1", `{}`},
 		{"PATCH", "/api/people/1", `{"weeklyHours":null}`},
 		{"PATCH", "/api/people/1", `{"weeklyHours":-1}`},
@@ -133,6 +140,9 @@ func TestSeededCapacity(t *testing.T) {
 		if person.Weeks[0].AllocatedHours != 0 {
 			t.Fatal("empty assignment range should retain people with zero allocation")
 		}
+	}
+	if maximum := get("2026-01-01", "2026-04-03"); len(maximum.People) != 500 || len(maximum.Weeks) != 14 {
+		t.Fatal("the 93-day limit should be inclusive and return all people and weeks")
 	}
 	oldHours := result.People[3].WeeklyHours
 	defer func() {

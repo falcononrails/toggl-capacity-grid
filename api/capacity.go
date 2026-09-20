@@ -39,7 +39,11 @@ func weeksInRange(from, to time.Time) []capacityWeek {
 	monday := from.AddDate(0, 0, -(int(from.Weekday())+6)%7)
 	weeks := []capacityWeek{}
 	for start := monday; !start.After(to); start = start.AddDate(0, 0, 7) {
-		week := capacityWeek{Start: start.Format(time.DateOnly), End: start.AddDate(0, 0, 6).Format(time.DateOnly)}
+		end := start.AddDate(0, 0, 6)
+		if end.Year() > 9999 {
+			end = to
+		}
+		week := capacityWeek{Start: start.Format(time.DateOnly), End: end.Format(time.DateOnly)}
 		for day := 0; day < 5; day++ {
 			date := start.AddDate(0, 0, day)
 			if !date.Before(from) && !date.After(to) {

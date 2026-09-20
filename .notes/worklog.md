@@ -36,3 +36,11 @@ left unfinished. Append as you go; a line or two per entry is right.
 - The editor waits for PATCH, invalidates every capacity query, then waits for the active range to refetch. No optimistic calculation or rollback is needed. Inactive ranges are marked stale and fetched when revisited. A native dialog handles focus containment and Escape.
 - Verified Dee at 50 hours in the current and a previously cached range, then at zero, then restored 40. Allocations stayed unchanged. Invalid negative input did not close the editor.
 - Stopped the local API to test failure handling. A failed save kept the entered value and editor open. A failed refresh retained the old table with a visible stale-data warning and retry button. Restarted the API after the check.
+
+## Final checks
+
+- Moved the capacity edit below each name after checking the 390px layout. A separate capacity column left too little room for a week beside the sticky names. Checked the editor on mobile and Escape dismissal as well.
+- Browser automation exposed date fields showing new values while the submitted React draft still held the old range. Both forms now read native FormData on submit, without a second copy of their inputs in React state. Retested January 7-9: Dee is 33/24 hours, or 33/19.5 after setting weekly hours to 32.5. Restored her to 40 afterwards.
+- Verified weekend-only dates, reversed dates, empty filters, and the maximum 93-day range in the browser. The largest range rendered 500 people and 14 week columns. A local warm-cache EXPLAIN ANALYZE used the assignment date index and completed in about 166 ms.
+- Go tests, go vet, frontend tests and the production build pass. Frontend calendar tests also pass with America/Los_Angeles as the process timezone. Added test commands and the API contract to README, and formatted the frontend files.
+- Remaining limits: no holidays or per-person work schedules, no historical capacity or edit conflict detection, and no virtualization. The table is bounded to 93 days but still renders every person. Browser flows were checked manually through automation; there is no committed browser-test suite.

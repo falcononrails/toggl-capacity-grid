@@ -93,3 +93,37 @@ We spend about ten minutes per submission, on:
 Then we talk about it for an hour, live, and extend it together. Come ready to explain
 what you decided and why — that conversation is the real point of this exercise, and it's
 much easier when the notes are honest about what you didn't get to.
+
+## Checking the implementation
+
+After `make up`, run these from the repository root:
+
+```bash
+docker compose exec -e TEST_DATABASE_URL=postgres://capacity:capacity@db:5432/capacity?sslmode=disable api go test -v ./...
+docker compose exec web npm test
+docker compose exec web npm run build
+```
+
+The Go tests exercise the handlers against the seed, including saved capacity changes.
+They restore the person they edit. The frontend tests cover calendar navigation,
+date validation and over-capacity classification using Node's test runner.
+
+For a quick browser check, the starting range gives Dee 45 allocated hours against
+40 available in the week of January 5. Change her weekly hours to 50, navigate to
+another week and back, and check that the new capacity is still used. Restore 40
+afterwards. Eli has 20 allocated hours and zero capacity in that same week.
+
+### API
+
+`GET /api/capacity?from=2025-12-29&to=2026-01-16` returns `from`, `to`, a `weeks`
+array (`start`, `end`, `workingDays`), and `people`. Each person has `id`, `name`,
+`weeklyHours`, and a `weeks` array with `weekStart`, `allocatedHours` and
+`capacityHours`. Missing allocations are zero, not missing cells.
+
+Dates are inclusive, with a maximum of 93 days. Weeks start on Monday. Only
+Monday-Friday counts, and partial weeks use weekly capacity times the selected
+working days divided by five. No holiday calendar is applied.
+
+`PATCH /api/people/4` accepts `{"weeklyHours": 32.5}` and returns the saved `id`
+and `weeklyHours`. Hours must be between zero and 168. The value applies to all
+weeks, including past weeks; the schema has no effective date or capacity history.
